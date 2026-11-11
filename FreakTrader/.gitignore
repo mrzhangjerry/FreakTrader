@@ -1,0 +1,29 @@
+
+# Java compiled files
+*.class
+
+# Maven build output
+target/
+
+# Other build tools
+build/
+out/
+.gradle/
+
+
+# VS Code
+.vscode/
+
+# Environment variables and API secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Log files
+*.log
+
+# Operating system files
+.DS_Store
+Thumbs.db
