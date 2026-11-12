@@ -1,4 +1,4 @@
-package main.FreakTrader.broker;
+package com.freaktrader.broker;
 
 public class AlpacaPaperTrader {
 }

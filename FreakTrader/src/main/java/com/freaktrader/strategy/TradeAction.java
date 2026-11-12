@@ -1,4 +1,7 @@
-package main.FreakTrader.strategy;
+package com.freaktrader.strategy;
 
-public class TradeAction {
+/** Direction of an order the strategy wants placed. */
+public enum TradeAction {
+    BUY,
+    SELL
 }

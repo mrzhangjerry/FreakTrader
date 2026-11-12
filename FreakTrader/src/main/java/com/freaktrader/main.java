@@ -1,11 +1,11 @@
 package com.freaktrader;
 
-/**
- * Hello world!
- */
+import com.freaktrader.broker.AlpacaConnection;
 
-public class main {
+public class Main {
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        AlpacaConnection alpaca = new AlpacaConnection();
+        String json = alpaca.get("/account");
+        System.out.println(json.replace(",", ",\n"));
     }
 }
