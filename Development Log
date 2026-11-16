@@ -11,7 +11,7 @@ November 11, 2026
   - getAccountRequest() — Constructs an authenticated HTTP GET request for Alpaca account information.
   - getAccount() — Sends the request, validates the HTTP response status, and returns the account information as a JSON string.
 
-November 16, 2026
+November 15, 2026
   Development Focus: Market Data Integration & HTTP Client Refactor (AlpacaMarketData.java, AlpacaConnection.java)
   Completed
   - Added the AlpacaMarketData class for querying market status and price data.
