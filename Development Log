@@ -1,19 +1,28 @@
 November 11, 2026
-Development Focus: Alpaca API Integration (AlpacaConnection.java)
-Completed
-- Configured the Java Maven development environment.
-- Set up environment variable loading for API credentials.
-- Implemented the initial AlpacaConnection.java class.
-- Implemented HTTP request construction and response handling.
-- Tested reading Alpaca API credentials and endpoint configuration.
+  Development Focus: Alpaca API Integration (AlpacaConnection.java)
+  Completed
+  - Configured the Java Maven development environment.
+  - Set up environment variable loading for API credentials.
+  - Implemented the initial AlpacaConnection.java class.
+  - Implemented HTTP request construction and response handling.
+  - Tested reading Alpaca API credentials and endpoint configuration.
+  
+  Implemented Methods
+  - getAccountRequest() — Constructs an authenticated HTTP GET request for Alpaca account information.
+  - getAccount() — Sends the request, validates the HTTP response status, and returns the account information as a JSON string.
 
-Implemented Methods
-- getAccountRequest() — Constructs an authenticated HTTP GET request for Alpaca account information.
-- getAccount() — Sends the request, validates the HTTP response status, and returns the account information as a JSON string.
-
-Current Project Status
-- Project structure: Established
-- Maven configuration: Completed
-- Alpaca API connection: Initial implementation completed
-- Paper trading order execution: Not yet implemented
-- Grid Trading Strategy: Planned
+November 16, 2026
+  Development Focus: Market Data Integration & HTTP Client Refactor (AlpacaMarketData.java, AlpacaConnection.java)
+  Completed
+  - Added the AlpacaMarketData class for querying market status and price data.
+  - Migrated AlpacaConnection from the previous HTTP client to OkHttp.
+  - Improved error handling: failed requests now report both the HTTP status code and Alpaca's error message.
+  - Added request timeouts.
+  - Added okhttp and gson dependencies to pom.xml.
+  - Renamed main.java to Main.java to follow Java naming conventions.
+  - Removed old duplicate source files and template tests.
+  - Verified end-to-end on the paper trading account: account status ACTIVE, market closed (Sunday), SPY latest price retrieved successfully.
+  
+  Implemented Methods
+  - isMarketOpen() — Queries Alpaca's market clock and returns whether the market is currently open.
+  - latestPrice(symbol) — Retrieves the latest trade price for the given symbol.
