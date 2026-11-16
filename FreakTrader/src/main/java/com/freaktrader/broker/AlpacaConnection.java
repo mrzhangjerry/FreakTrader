@@ -2,97 +2,97 @@ package com.freaktrader.broker;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
- * Sends authenticated HTTP requests to Alpaca and returns the raw JSON response.
- * Knows nothing about orders or prices; AlpacaMarketData / AlpacaPaperTrader build on it.
+ * Talks to Alpaca: sends a request, gives back the JSON text.
+ * It does not know about prices or orders, other classes handle that.
  */
 public class AlpacaConnection {
 
     private static final String DATA_URL = "https://data.alpaca.markets";
+    private static final MediaType JSON = MediaType.get("application/json");
 
     private final String apiKey;
     private final String secretKey;
     private final String endpoint;
-    private final HttpClient httpClient;
+    private final OkHttpClient httpClient;
 
     public AlpacaConnection() {
+        // read the keys and address from the .env file
         Dotenv env = Dotenv.load();
 
         this.apiKey = env.get("ALPACA_API_KEY");
         this.secretKey = env.get("ALPACA_SECRET_KEY");
         String url = env.get("ALPACA_ENDPOINT");
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = new OkHttpClient();
 
         if (apiKey == null || secretKey == null || url == null) {
             throw new IllegalStateException(
                     ".env is missing ALPACA_API_KEY / ALPACA_SECRET_KEY / ALPACA_ENDPOINT");
         }
 
-        // remove a trailing "/" so endpoint + "/v2/account" never becomes "//v2/account"
-        this.endpoint = url.endsWith("/") 
-            ? url.substring(0, url.length() - 1) 
+        // drop a "/" at the end, so we never get "//" in the address
+        this.endpoint = url.endsWith("/")
+            ? url.substring(0, url.length() - 1)
             : url;
     }
 
-    // ===== exterior functions =====
+    // ===== use these =====
 
-    /** Trading API, e.g. get("/v2/account") */
+    /** Get account or order info, e.g. get("/v2/account") */
     public String get(String path) {
         return send("GET", endpoint + path, null);
     }
 
-    /** Market data API, e.g. getData("/v2/stocks/SPY/trades/latest") */
+    /** Get prices, e.g. getData("/v2/stocks/SPY/trades/latest") */
     public String getData(String path) {
         return send("GET", DATA_URL + path, null);
     }
 
-    /** Trading API with a JSON body, e.g. placing an order */
+    /** Send data, e.g. place an order */
     public String post(String path, String json) {
         return send("POST", endpoint + path, json);
     }
 
-    /** Trading API, e.g. cancelling an order */
+    /** Remove something, e.g. cancel an order */
     public String delete(String path) {
         return send("DELETE", endpoint + path, null);
     }
 
-    // ===== internal function =====
+    // ===== does the real work =====
 
     private String send(String method, String url, String json) {
-        // GET / DELETE have no body; POST carries JSON
-        HttpRequest.BodyPublisher body = (json == null)
-                ? HttpRequest.BodyPublishers.noBody()
-                : HttpRequest.BodyPublishers.ofString(json);
+        // only POST sends data; GET and DELETE send nothing
+        RequestBody body = (json == null) ? null : RequestBody.create(json, JSON);
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .header("APCA-API-KEY-ID", apiKey)
-                .header("APCA-API-SECRET-KEY", secretKey)
-                .header("Content-Type", "application/json")
-                .method(method, body)
-                .build();
+        // the address plus our keys, so Alpaca knows who we are
+        Request request = new Request.Builder()
+            .url(url)
+            .header("APCA-API-KEY-ID", apiKey)
+            .header("APCA-API-SECRET-KEY", secretKey)
+            .method(method, body)
+            .build();
 
-        HttpResponse<String> response;
-        try {
-            response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        // send it and wait for the answer (closed automatically when done)
+        try (Response response = httpClient.newCall(request).execute()) {
+            ResponseBody responseBody = response.body();
+            String text = (responseBody != null) ? responseBody.string() : "";
+
+            // Alpaca said no (wrong key, wrong path, bad order...): stop with the reason
+            if (!response.isSuccessful()) {
+                throw new RuntimeException(
+                        "Alpaca rejected " + method + " " + url + " (HTTP " + response.code() + "): " + text);
+            }
+            return text;
         } catch (IOException e) {
+            // if not reach Alpaca (no internet, timeout...)
             throw new RuntimeException("Network error: " + method + " " + url, e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Request interrupted: " + method + " " + url, e);
         }
-
-        // 2xx = success; anything else (401 bad key, 404 bad path, 422 bad order...) output error
-        int code = response.statusCode();
-        if (code < 200 || code >= 300) {
-            throw new RuntimeException(
-                    "Alpaca rejected " + method + " " + url + " (HTTP " + code + "): " + response.body());
-        }
-        return response.body();
     }
 }
