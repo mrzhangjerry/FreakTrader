@@ -1,3 +1,5 @@
+package com.freaktrader.strategy;
+
 /**
  * Define the possible decisions a trading strategy can return
  * * */

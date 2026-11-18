@@ -1,3 +1,5 @@
+package com.freaktrader.strategy;
+
 /**
  * This class creates price levels using a GridConfig.
  * Each interval has the same spacing.

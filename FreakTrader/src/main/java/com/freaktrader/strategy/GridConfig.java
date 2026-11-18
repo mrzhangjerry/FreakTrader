@@ -1,3 +1,5 @@
+package com.freaktrader.strategy;
+
 import static java.lang.Double.isFinite;
 
 /**
